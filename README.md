@@ -1,13 +1,34 @@
-# MIDI-Converter
 
-Converts synthesia like piano tutorials to clean MIDI files, that can be further converted to mp3 or piano sheets.
-It needs to know the distance in pixels from the top where an imaginary line would cross the black and white keys on the keyboard.
-Also needs a starting frame, where none of the keys are pressed and the keyboard is clearly visible.
+# MP4 Synthesia to MIDI
 
-In the example folder, there is the result of the conversion to midi, mp3, and sheet music.
+Are you a penny-pinching upcoming musician like me, that wants to learn how to play the piano without paying a single cent?
 
-To convert to sheet music I used the program MidiSheetMusic-2.6 and to convert to mp3 I used this https://audio.online-convert.com/de/umwandeln/midi-zu-mp3 website.
+Great this repo has you covered!
 
-Example photo of the first frame, a distance of 650 pixels would be appropriate in this case.
+Simply find any synthesia style video-tutorial on youtube and copy the link.
 
-![alt text](https://github.com/41pha1/MIDI-Converter/blob/main/example/example.png?raw=true)
+Now run the script, answer a few simple questions, and there you go! You have semi beautiful midi file to further convert to sheet music.
+
+
+## Installation
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+
+## Example
+
+```
+python main.py
+
+Enter YouTube video url: https://www.youtube.com/watch?v=q6fUM_z8E24
+Enter output Midifile path: test.mid
+Enter keyboard distance from the top in pixels (default = 650): 650
+Enter a starting frame for analizing the video where the keyboard is clearly visible and no keys are pressed: 30
+Downloading video...
+Done!
+Detected 88 keys.
+Saved as test.mid !
+```
+

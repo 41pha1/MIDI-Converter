@@ -1,7 +1,9 @@
 import cv2
 import numpy as np
 import struct
+from mido import Message, MidiFile, MidiTrack
 from pytube import YouTube
+from mido import MetaMessage
 
 
 activationThreshold = 15
@@ -21,60 +23,6 @@ keyPositions = []
 defaultValues = []
 keyLabels = []
 middleC = 0
-
-midiFile = []
-trackLengthIndex = 0
-
-def addMidiHeader(fps):
-    midiFile.append(ord('M'))
-    midiFile.append(ord('T'))
-    midiFile.append(ord('h'))
-    midiFile.append(ord('d'))
-    midiFile.append(0)
-    midiFile.append(0)
-    midiFile.append(0)
-    midiFile.append(6)
-    midiFile.append(0)
-    midiFile.append(1)
-    midiFile.append(0)
-    midiFile.append(1)
-    midiFile.append(0)
-    midiFile.append(fps)
-
-def beginTrack():
-    global trackLengthIndex
-    midiFile.append(ord('M'))
-    midiFile.append(ord('T'))
-    midiFile.append(ord('r'))
-    midiFile.append(ord('k'))
-    midiFile.append(0)
-    midiFile.append(0)
-    midiFile.append(0)
-    midiFile.append(0)
-    trackLengthIndex = len(midiFile)-1
-
-def endTrack():
-    midiFile.append(0)
-    midiFile.append(0xFF)
-    midiFile.append(0x2F)
-    midiFile.append(0)
-    length = (len(midiFile)-trackLengthIndex)-1
-    midiFile[trackLengthIndex-3] = int(length / 0xFF0000)
-    midiFile[trackLengthIndex-2] = int(length / 0xFF00) % 0xFF00000
-    midiFile[trackLengthIndex-1] = int(length / 0xFF) % 0xFF00
-    midiFile[trackLengthIndex] = int(length) % 0xFF
-
-def turnNoteOn(dTime, channel, note, speed):
-    midiFile.append(dTime%128)
-    midiFile.append(0x90 + channel)
-    midiFile.append(note)
-    midiFile.append(speed)
-
-def turnNoteOff(dTime, channel, note):
-    midiFile.append(dTime%128)
-    midiFile.append(0x80 + channel)
-    midiFile.append(note)
-    midiFile.append(0)
 
 def labelKeys(keyboard):
     cIndex = 0
@@ -132,22 +80,29 @@ def extractKeyPositions(keyboard):
 
     print("Detected", len(keyPositions), "keys.")
 
-if(downloadVideo):
-    print("Downloading video...")
-    yt = YouTube(url)
-    yt.streams.get_by_itag(22).download('videos/')
-    inputVideo = 'videos/' + str(yt.title) + ".mp4"
-    print("Done!")
+
     
 
 if __name__ == "__main__":
-    addMidiHeader(15)
-    beginTrack()
+    mid = MidiFile()
+    track = MidiTrack()
+    mid.tracks.append(track)
+    #MetaMessage('set_tempo', tempo = 30)
 
+    if(downloadVideo):
+        print("Downloading video...")
+        yt = YouTube(url)
+        yt.streams.get_by_itag(22).download('videos/')
+        inputVideo = 'videos/' + str(yt.title.replace("/", "").replace("'", "")) + ".mp4"
+        print("Done!")
+    
     vidcap = cv2.VideoCapture(inputVideo)
     success,image = vidcap.read()
     count = 0
     lastMod = 0
+
+    if not success:
+        exit("Could not open video: " +  str(inputVideo))
 
     lastPressed = []
 
@@ -176,20 +131,19 @@ if __name__ == "__main__":
 
             for i in range(len(pressed)):
                 if not pressed[i] == lastPressed[i]:
+                    if(lastMod == 0 and count > 30):
+                        lastMod = count-30
                     if(pressed[i] == 1):
-                        turnNoteOn(count - lastMod, 0, 0x3C-middleC+i, 0x40)
+                        track.append(Message('note_on', note = 66 - middleC + i, velocity=64, time=(count - lastMod)*30))
                         lastMod = count
                     if(pressed[i] == 0):
-                        turnNoteOff(count - lastMod, 0, 0x3C-middleC+i)
+                        track.append(Message('note_off', note = 66 - middleC + i, velocity=127, time=(count - lastMod)*30))
                         lastMod = count
-            print("Processing frame", count, end="\r")
+            print("Processing frame", count, "...", end="\r")
             lastPressed = pressed
         success,image = vidcap.read()
         count += 1
 
-    endTrack()
 
-    with open(output, "wb") as output_file:
-        output_file.write(bytes(midiFile))
-
-    print("Saved as", output, "!")
+    mid.save(output)
+    print("Saved as", output, "!               ")
