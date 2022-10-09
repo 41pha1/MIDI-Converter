@@ -35,3 +35,8 @@ Saved as test.mid !
 ## Result
 ![alt text](https://github.com/41pha1/MIDI-Converter/blob/main/example/example-midi.png?width=400)
 This is a preview of the generated midi file.
+
+## Disclaimer
+
+I am not responsible for any psychological damage that may occur upon taking a look at the source code.
+INSPECT AT YOUR OWN RISK
