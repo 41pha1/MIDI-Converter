@@ -7,6 +7,7 @@ activationThreshold = 30
 whiteThreshold = 150
 minKeyWidth = 3
 blackThreshold = 100
+keyboardHeight = 640
 downloadVideo = True
 
 if downloadVideo:
@@ -14,7 +15,6 @@ if downloadVideo:
 else:
     inputVideo = str(input("Enter input Videofile path: "))
 output = str(input("Enter output Midifile path: "))
-keyboardHeight = int(input("Enter keyboard distance from the top in pixels (default = 640): "))
 startFrame = int(input("Enter a starting frame for analizing the video where the keyboard is clearly visible and no keys are pressed: "))
 
 keyPositions = []
