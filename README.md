@@ -24,7 +24,6 @@ python main.py
 
 Enter YouTube video url: https://www.youtube.com/watch?v=HNPZ6KuJZYk
 Enter output Midifile path: test.mid
-Enter keyboard distance from the top in pixels (default = 650): 650
 Enter a starting frame for analizing the video where the keyboard is clearly visible and no keys are pressed: 30
 Downloading video...
 Done!
@@ -33,7 +32,7 @@ Saved as test.mid !
 ```
 
 ## Result
-![alt text](https://github.com/41pha1/MIDI-Converter/blob/main/example/example-midi.png?width=400)
+![alt text](https://github.com/41pha1/MIDI-Converter/blob/main/example-midi.png?width=400)
 This is a preview of the generated midi file.
 
 ## Disclaimer
