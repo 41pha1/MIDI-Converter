@@ -24,7 +24,6 @@ python main.py
 
 Enter YouTube video url: https://www.youtube.com/watch?v=HNPZ6KuJZYk
 Enter output Midifile path: test.mid
-Enter keyboard distance from the top in pixels (default = 640): 640
 Enter a starting frame for analizing the video where the keyboard is clearly visible and no keys are pressed: 30
 Downloading video...
 Done!
