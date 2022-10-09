@@ -32,3 +32,6 @@ Detected 88 keys.
 Saved as test.mid !
 ```
 
+## Result
+![alt text](https://github.com/41pha1/MIDI-Converter/blob/main/example/example-midi.png?width=400)
+This is a preview of the generated midi file.
