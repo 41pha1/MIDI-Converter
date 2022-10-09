@@ -7,7 +7,7 @@ Great this repo has you covered!
 
 Simply find any synthesia style video-tutorial on youtube and copy the link.
 
-Now run the script, answer a few simple questions, and there you go! You have semi beautiful midi file to further convert to sheet music.
+Now run the script, answer a few simple questions, and there you go! You have a semi-beautiful midi file to further convert to sheet music or anything you'd like.
 
 
 ## Installation
@@ -32,3 +32,6 @@ Detected 88 keys.
 Saved as test.mid !
 ```
 
+## Result
+![alt text](https://github.com/41pha1/MIDI-Converter/blob/main/example/example-midi.png?width=400)
+This is a preview of the generated midi file.
