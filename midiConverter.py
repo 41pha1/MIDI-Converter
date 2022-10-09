@@ -2,18 +2,20 @@ import cv2
 import numpy as np
 import struct
 from pytube import YouTube
-import matplotlib.pyplot as plt
 
 
 activationThreshold = 15
 whiteThreshold = 150
 minKeyWidth = 3
 blackThreshold = 100
-downloadVideo = False
-inputVideo = str(raw_input("Enter input Videofile name: "))
-output = str(raw_input("Enter input Midifile name: "))
-keyboardHeight = int(raw_input("Enter keyboard distance from the top in pixels (default = 650): "))
-startFrame = int(raw_input("Enter start a starting frame for analizing the video"))
+downloadVideo = True
+if downloadVideo:
+    url = str(input("Enter YouTube video url: "))
+else:
+    inputVideo = str(input("Enter input Videofile path: "))
+output = str(input("Enter output Midifile path: "))
+keyboardHeight = int(input("Enter keyboard distance from the top in pixels (default = 650): "))
+startFrame = int(input("Enter a starting frame for analizing the video where the keyboard is clearly visible and no keys are pressed: "))
 
 keyPositions = []
 defaultValues = []
@@ -89,7 +91,7 @@ def labelKeys(keyboard):
         if label == 0:
             lastC = i
 
-    middleC = (cIndex+lastC)/2
+    middleC = int((cIndex+lastC)/2)
 
 def getPressedKeys(keys):
     pressed = []
@@ -114,8 +116,8 @@ def extractKeyPositions(keyboard):
             if(inWhiteKey):
                 inWhiteKey = False
                 if(i-keyStart>minKeyWidth):
-                    keyPositions.append((keyStart+i)/2)
-                    defaultValues.append(keyboard[(keyStart+i)/2])
+                    keyPositions.append(int((keyStart+i)/2))
+                    defaultValues.append(keyboard[int((keyStart+i)/2)])
 
         if(b<blackThreshold):
             if(not inBlackKey and not inWhiteKey):
@@ -125,70 +127,69 @@ def extractKeyPositions(keyboard):
             if(inBlackKey):
                 inBlackKey = False
                 if((i-keyStart)>minKeyWidth):
-                    keyPositions.append((keyStart+i)/2)
-                    defaultValues.append(keyboard[(keyStart+i)/2])
+                    keyPositions.append(int((keyStart+i)/2))
+                    defaultValues.append(keyboard[int((keyStart+i)/2)])
 
-    print(len(keyPositions))
-    plt.plot(keyboard)
-    plt.bar(keyPositions, 255)
-    plt.pause(5.)
-    plt.clf()
+    print("Detected", len(keyPositions), "keys.")
 
 if(downloadVideo):
-    YouTube(url).streams.first().download('videos/')
+    print("Downloading video...")
+    yt = YouTube(url)
+    yt.streams.get_by_itag(22).download('videos/')
+    inputVideo = 'videos/' + str(yt.title) + ".mp4"
+    print("Done!")
+    
 
+if __name__ == "__main__":
+    addMidiHeader(15)
+    beginTrack()
 
-addMidiHeader(15)
-beginTrack()
-
-vidcap = cv2.VideoCapture(inputVideo)
-success,image = vidcap.read()
-count = 0
-success = True
-lastMod = 0
-
-lastPressed = []
-
-while success:
-    ia = np.asarray(image)
-    kb = []
-
-    for x in range(len(ia[0])):
-        kb.append(0)
-        for c in range (3):
-            kb[x] += ia[keyboardHeight][x][c]
-        kb[x] /= 3
-
-    if count == startFrame:
-        extractKeyPositions(kb)
-        labelKeys(kb)
-        lastPressed = [0] * len(keyLabels)
-
-    if(count >= startFrame):
-        keys = [];
-
-        for i in range(len(keyPositions)):
-            keys.append(kb[keyPositions[i]])
-
-        pressed = getPressedKeys(keys)
-
-        for i in range(len(pressed)):
-            if not pressed[i] == lastPressed[i]:
-                if(pressed[i] == 1):
-                    turnNoteOn(count - lastMod, 0, 0x3C-middleC+i, 0x40)
-                    lastMod = count
-                if(pressed[i] == 0):
-                    turnNoteOff(count - lastMod, 0, 0x3C-middleC+i)
-                    lastMod = count
-        print(count, middleC)
-        #plt.bar(range(len(pressed)), keys)
-        #plt.pause(0.005)
-        #plt.clf()
-        lastPressed = pressed
+    vidcap = cv2.VideoCapture(inputVideo)
     success,image = vidcap.read()
-    count += 1
+    count = 0
+    lastMod = 0
 
-endTrack()
+    lastPressed = []
 
-outputFile = open(output, "wb")
-outputFile.write(struct.pack(str(len(midiFile))+'B', *midiFile))
+    while success:
+        ia = np.asarray(image)
+        kb = []
+
+        for x in range(len(ia[0])):
+            kb.append(0)
+            for c in range (3):
+                kb[x] += ia[keyboardHeight][x][c]
+            kb[x] /= 3
+
+        if count == startFrame:
+            extractKeyPositions(kb)
+            labelKeys(kb)
+            lastPressed = [0] * len(keyLabels)
+
+        if(count >= startFrame):
+            keys = [];
+
+            for i in range(len(keyPositions)):
+                keys.append(kb[keyPositions[i]])
+
+            pressed = getPressedKeys(keys)
+
+            for i in range(len(pressed)):
+                if not pressed[i] == lastPressed[i]:
+                    if(pressed[i] == 1):
+                        turnNoteOn(count - lastMod, 0, 0x3C-middleC+i, 0x40)
+                        lastMod = count
+                    if(pressed[i] == 0):
+                        turnNoteOff(count - lastMod, 0, 0x3C-middleC+i)
+                        lastMod = count
+            print("Processing frame", count, end="\r")
+            lastPressed = pressed
+        success,image = vidcap.read()
+        count += 1
+
+    endTrack()
+
+    with open(output, "wb") as output_file:
+        output_file.write(bytes(midiFile))
+
+    print("Saved as", output, "!")
