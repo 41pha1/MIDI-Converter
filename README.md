@@ -13,7 +13,7 @@ Now run the script, answer a few simple questions, and there you go! You have a 
 ## Features
 
 - Automatically extracts the key positions
-- Only need a link to the video is required
+- Only a link to the video is required
 
 ## Installation
 
