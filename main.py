@@ -1,3 +1,5 @@
+import sys
+import getopt
 import cv2
 import numpy as np
 from mido import Message, MidiFile, MidiTrack, MetaMessage
@@ -8,15 +10,9 @@ whiteThreshold = 150
 minKeyWidth = 3
 blackThreshold = 100
 keyboardHeight = 640
-downloadVideo = True
-
-if downloadVideo:
-    url = str(input("Enter YouTube video url: "))
-else:
-    inputVideo = str(input("Enter input Videofile path: "))
-output = str(input("Enter output Midifile path: "))
-startFrame = int(input("Enter a starting frame for analizing the video where the keyboard is clearly visible and no keys are pressed: "))
-
+startFrame = 0
+endFrame = -1
+output = "out.mid"
 keyPositions = []
 defaultValues = []
 keyLabels = []
@@ -76,23 +72,53 @@ def extractKeyPositions(keyboard):
                     keyPositions.append(int((keyStart+i)/2))
                     defaultValues.append(keyboard[int((keyStart+i)/2)])
 
+    if len(keyPositions) < 10:
+        print("Did not detect a valid keyboard at the specified start, check your start time and keyboard height")
     print("Detected", len(keyPositions), "keys.")
 
+def print_usage():
+    print("Usage: main.py <youtube-url> -o <outputfile = out.mid> -s <start_in_seconds = 0> -e <end_in_seconds = -1> -t <activation_threshold = 30> -k <proportional_keyboard_height_from_top = 0.88>")
 
+def parse_options(argv):
+    global url, output, startFrame, endFrame, keyboardHeight, activationThreshold
+
+    if not argv:
+        print_usage()
+        sys.exit()
+    url = argv[0]
+
+    try:
+        opts, args = getopt.getopt(argv[1:],"ho:s:e:k:t:",["help", "output=", "start=", "end=", "keyboard_height=", "threshold="])
+    except getopt.GetoptError:
+        print_usage()
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt in ("-h", "--help"):
+            print_usage()
+            sys.exit()
+        elif opt in ("-o", "--output"):
+            output = arg
+        elif opt in ("-s", "--start"):
+            startFrame = int(float(arg) * 30)
+        elif opt in ("-e", "--end"):
+            endFrame = int(float(arg) * 30)
+        elif opt in ("-k", "--keyboard_height"):
+            keyboardHeight = int(float(arg) * 720)
+        elif opt in ("-t", "--threshold"):
+            activationThreshold = int(arg)
     
 
 if __name__ == "__main__":
+    parse_options(sys.argv[1:])
+
     mid = MidiFile()
     track = MidiTrack()
     mid.tracks.append(track)
-    #MetaMessage('set_tempo', tempo = 30)
 
-    if(downloadVideo):
-        print("Downloading video...")
-        yt = YouTube(url)
-        yt.streams.get_by_itag(22).download('videos/')
-        inputVideo = 'videos/' + str(yt.title.replace("/", "").replace("'", "")) + ".mp4"
-        print("Done!")
+    print("Downloading video...")
+    yt = YouTube(url)
+    yt.streams.get_by_itag(22).download('videos/')
+    inputVideo = 'videos/' + str(yt.title.replace("/", "").replace("'", "")) + ".mp4"
     
     vidcap = cv2.VideoCapture(inputVideo)
     success,image = vidcap.read()
@@ -142,6 +168,8 @@ if __name__ == "__main__":
         success,image = vidcap.read()
         count += 1
 
+        if not endFrame == -1 and count > endFrame:
+            break
 
     mid.save(output)
     print("Saved as", output, "!               ")
