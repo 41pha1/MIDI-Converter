@@ -10,6 +10,11 @@ Simply find any synthesia style video-tutorial on youtube and copy the link.
 Now run the script, answer a few simple questions, and there you go! You have a semi-beautiful midi file to further convert to sheet music or anything you'd like.
 
 
+## Features
+
+- Automatically extracts the key positions
+- Only need a link to the video is required
+
 ## Installation
 
 ```bash
@@ -20,15 +25,14 @@ python -m pip install -r requirements.txt
 ## Example
 
 ```
-python main.py
+python main.py --help
+Usage: main.py <youtube-url> -o <outputfile = out.mid> -s <start_in_seconds = 0> -e <end_in_seconds = -1> -t <activation_threshold = 30> -k <proportional_keyboard_height_from_top = 0.88>
 
-Enter YouTube video url: https://www.youtube.com/watch?v=HNPZ6KuJZYk
-Enter output Midifile path: test.mid
-Enter a starting frame for analizing the video where the keyboard is clearly visible and no keys are pressed: 30
+python main.py https://youtu.be/HNPZ6KuJZYk
+
 Downloading video...
-Done!
 Detected 88 keys.
-Saved as test.mid !
+Saved as out.mid !
 ```
 
 ## Result
