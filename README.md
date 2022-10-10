@@ -41,7 +41,7 @@ Saved as out.mid.
 
 from youtube_midify import convert
 
-convert("https://youtu.be/HNPZ6KuJZYk", outuput = "out.mid", start = 0, end = -1, keyboard_height = 0.85, threshold = 30)
+convert("https://youtu.be/HNPZ6KuJZYk", output = "out.mid", start = 0, end = -1, keyboard_height = 0.85, threshold = 30)
 
 ```
 ## Result
