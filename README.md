@@ -25,10 +25,10 @@ python -m pip install -r requirements.txt
 ## Console
 
 ```bash
-python youtube_midify.py --help
+>> python youtube_midify.py --help
 Usage: youtube_midify.py <youtube-url> -o <outputfile = out.mid> -s <start_in_seconds = 0> -e <end_in_seconds = -1> -t <activation_threshold = 30> -k <proportional_keyboard_height_from_top = 0.88>
 
-python youtube_midify.py https://youtu.be/HNPZ6KuJZYk
+>> python youtube_midify.py https://youtu.be/HNPZ6KuJZYk
 
 Downloading video...
 Detected 88 keys.
