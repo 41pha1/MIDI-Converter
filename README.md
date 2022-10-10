@@ -1,5 +1,5 @@
 
-# MP4 Synthesia to MIDI
+# Youtube Synthesia to MIDI
 
 Are you a penny-pinching upcoming musician like me, that wants to learn how to play the piano without paying a single cent?
 
