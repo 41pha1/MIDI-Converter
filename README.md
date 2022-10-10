@@ -21,7 +21,6 @@ Now run the script, answer a few simple questions, and there you go! You have a 
 python -m pip install -r requirements.txt
 ```
 
-
 ## Console
 
 ```bash
