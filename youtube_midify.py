@@ -5,7 +5,7 @@ import numpy as np
 from mido import Message, MidiFile, MidiTrack, MetaMessage
 from pytube import YouTube
 
-__activationThreshold = 30
+__activationThreshold = 40
 __whiteThreshold = 150
 __minKeyWidth = 3
 __blackThreshold = 100
