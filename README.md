@@ -51,5 +51,3 @@ This is a preview of the generated midi file.
 I am not responsible for any psychological damage that may occur upon taking a look at the source code.
 
 INSPECT AT YOUR OWN RISK
-
-[![Download](https://img.shields.io/github/downloads/41pha1/MIDI-Converter/total.svg?color=blue)](https://github.com/41pha1/MIDI-Converter/releases/latest)
