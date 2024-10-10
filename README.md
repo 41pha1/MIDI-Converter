@@ -9,7 +9,7 @@ Simply find any synthesia style video-tutorial on youtube and copy the link.
 
 Now run the script and there you go! You have a semi-beautiful midi file to further convert to sheet music or anything you'd like.
 
-# !IMPORTANT!
+# IMPORTANT
 
 YouTube download is currently disabled due to the recent changes in the YouTube API. You can still download the video manually and provide the path to the video file as an argument.
 
