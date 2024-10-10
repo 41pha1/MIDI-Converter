@@ -41,9 +41,16 @@ def __getPressedKeys(keys):
     return pressed
 
 def __extractKeyPositions(keyboard):
+    global __keyPositions, __defaultValues, __whiteThreshold, __blackThreshold, __minKeyWidth
+
     inWhiteKey = False
     inBlackKey = False
     keyStart = 0
+    maxBrightness = max(keyboard)
+    minBrightness = min(keyboard)
+    __whiteThreshold = minBrightness + (maxBrightness - minBrightness) * 0.6
+    __blackThreshold = minBrightness + (maxBrightness - minBrightness) * 0.4
+
     for i in range(len(keyboard)):
         b = keyboard[i]
         if(b>__whiteThreshold):
@@ -71,15 +78,21 @@ def __extractKeyPositions(keyboard):
     print("Detected", len(__keyPositions), "keys.")
 
 def __print_usage():
-    print("Usage: main.py <youtube-url> -o <outputfile = out.mid> -s <start_in_seconds = 0> -e <end_in_seconds = -1> -t <activation_threshold = 30> -k <proportional_keyboard_height_from_top = 0.85>")
+    print("Usage: main.py <youtube-url / \"videofile.mp4\"> -o <outputfile = out.mid> -s <start_in_seconds = 0> -e <end_in_seconds = -1> -t <activation_threshold = 30> -k <proportional_keyboard_height_from_top = 0.85>")
 
 def __parse_options(argv):
-    global __url, __output, __start, __end, __keyboardHeight, __activationThreshold
+    global __video, __is_url, __output, __start, __end, __keyboardHeight, __activationThreshold
 
     if not argv:
         __print_usage()
         sys.exit()
-    __url = argv[0]
+    
+    if argv[0].endswith(".mp4"):
+        __is_url = False
+        __video = argv[0]
+    else:
+        __video = argv[0]
+        __is_url = True
 
     try:
         opts, args = getopt.getopt(argv[1:],"ho:s:e:k:t:",["help", "output=", "start=", "end=", "keyboard_height=", "threshold="])
@@ -102,30 +115,34 @@ def __parse_options(argv):
             __activationThreshold = int(arg)
     
 
-def convert(url, output = "out.mid", start = 0, end = -1, keyboard_height = 0.85, threshold = 30):
+def convert(video, is_url, output = "out.mid", start = 0, end = -1, keyboard_height = 0.85, threshold = 30):
     global __threshold, __keyboardHeight
     __threshold = threshold
-
-    keyboard_height = int(720 * keyboard_height)
-    startFrame = int(start * 30)
-    endFrame = int(end * 30)
-
-    if(end == -1):
-        endFrame = -1
     
     mid = MidiFile()
     track = MidiTrack()
     mid.tracks.append(track)
 
-    print("Downloading video...")
-    yt = YouTube(url)
-    yt.streams.get_by_itag(22).download('videos/')
-    inputVideo = 'videos/' + str(yt.title.replace("/", "").replace("'", "").replace("|", "").replace(".", "")) + ".mp4"
+    if is_url:
+        print("Downloading video...")
+        yt = YouTube(video)
+        yt.streams.get_by_itag(22).download('videos/')
+        inputVideo = 'videos/' + str(yt.title.replace("/", "").replace("'", "").replace("|", "").replace(".", "")) + ".mp4"
+    else:
+        inputVideo = video
     
     vidcap = cv2.VideoCapture(inputVideo)
     success,image = vidcap.read()
     count = 0
     lastMod = 0
+
+    frame_height, frame_width, _ = image.shape
+    fps = vidcap.get(cv2.CAP_PROP_FPS)
+    print("Processing video at %dp@%d..." % (frame_height, fps))
+
+    keyboard_height = int(frame_height * keyboard_height)
+    startFrame = int(start * fps)
+    endFrame = int(end * fps)
 
     if not success:
         exit("Could not open video: " +  str(inputVideo))
@@ -137,18 +154,23 @@ def convert(url, output = "out.mid", start = 0, end = -1, keyboard_height = 0.85
         kb = []
 
         for x in range(len(ia[0])):
-            kb.append(0)
-            for c in range (3):
-                kb[x] += ia[keyboard_height][x][c]
-            kb[x] /= 3
+            kb.append( np.mean(ia[keyboard_height][x]) )
 
         if count == startFrame:
             __extractKeyPositions(kb)
+            
+            cv2.line(image, (0, keyboard_height), (frame_width, keyboard_height), (0, 255, 0), 2)
+            for i in range(len(__keyPositions)):
+                cv2.circle(image, (__keyPositions[i], keyboard_height), 7, (255,255,255) if __defaultValues[i] < __whiteThreshold else (0,0,0), -1)
+                cv2.circle(image, (__keyPositions[i], keyboard_height), 5, (255,255,255) if __defaultValues[i] > __whiteThreshold else (0,0,0), -1)
+
+            cv2.imwrite("start_frame.jpg", image)
             __labelKeys(kb)
+
             lastPressed = [0] * len(__keyPositions)
 
         if(count >= startFrame):
-            keys = [];
+            keys = []
 
             for i in range(len(__keyPositions)):
                 keys.append(kb[__keyPositions[i]])
@@ -157,20 +179,20 @@ def convert(url, output = "out.mid", start = 0, end = -1, keyboard_height = 0.85
 
             for i in range(len(pressed)):
                 if not pressed[i] == lastPressed[i]:
-                    if(lastMod == 0 and count > 30):
-                        lastMod = count-30
+                    if(lastMod == 0 and count > fps):
+                        lastMod = count-fps
                     if(pressed[i] == 1):
-                        track.append(Message('note_on', note = 60 - __middleC + i, velocity=64, time=(count - lastMod)*30))
+                        track.append(Message('note_on', note = 60 - __middleC + i, velocity=64, time=int((count - lastMod)* fps)))
                         lastMod = count
                     if(pressed[i] == 0):
-                        track.append(Message('note_off', note = 60 - __middleC + i, velocity=127, time=(count - lastMod)*30))
+                        track.append(Message('note_off', note = 60 - __middleC + i, velocity=127, time=int((count - lastMod)* fps)))
                         lastMod = count
             print("Processing frame", count, "...", end="\r")
             lastPressed = pressed
         success,image = vidcap.read()
         count += 1
 
-        if not endFrame == -1 and count > endFrame:
+        if endFrame > 0 and count > endFrame:
             break
 
     mid.save(output)
@@ -178,5 +200,5 @@ def convert(url, output = "out.mid", start = 0, end = -1, keyboard_height = 0.85
 
 if __name__ == "__main__":
     __parse_options(sys.argv[1:])
-    convert(__url, __output, __start, __end, __keyboardHeight, __activationThreshold)
+    convert(__video, __is_url, __output, __start, __end, __keyboardHeight, __activationThreshold)
     
